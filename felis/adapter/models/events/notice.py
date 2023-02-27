@@ -1,38 +1,38 @@
-from pydantic import BaseModel
+from ..event import BaseEvent
 
 
-class NotifyEvent(BaseModel):
-    detail_type: str
+class NotifyEvent(BaseEvent):
     user_id: str
+
+
+class PrivateNotifyEvent(NotifyEvent):
+    pass
 
 
 class GroupNotifyEvent(NotifyEvent):
     group_id: str
 
 
-class FriendIncreaseEvent(NotifyEvent):
+class FriendIncreaseEvent(PrivateNotifyEvent):
     pass
 
 
-class FriendDecreaseEvent(NotifyEvent):
+class FriendDecreaseEvent(PrivateNotifyEvent):
     pass
 
 
-class PrivateMessageDeleteEvent(NotifyEvent):
+class PrivateMessageDeleteEvent(PrivateNotifyEvent):
     message_id: str
 
 
 class GroupMemberIncreaseEvent(GroupNotifyEvent):
-    sub_type: str
     operator_id: str
 
 
 class GroupMemberDecreaseEvent(GroupNotifyEvent):
-    sub_type: str
     operator_id: str
 
 
 class GroupMessageDeleteEvent(GroupNotifyEvent):
-    sub_type: str
     message_id: str
     operator_id: str

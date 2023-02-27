@@ -1,9 +1,8 @@
-from pydantic import BaseModel
+from ..event import BaseEvent
 from ..message import Message
 
 
-class MessageEvent(BaseModel):
-    detail_type: str
+class MessageEvent(BaseEvent):
     message_id: str
     message: Message
     alt_message: str
