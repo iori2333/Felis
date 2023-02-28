@@ -1,21 +1,41 @@
 from asyncio import Future
 from typing_extensions import override
-from .backends.base import AdapterBackend
+from .backends import BackendFactory
+
 from felis.base import Actor, Behavior, Message, cast
+
+from .models.action import ActionResponse
+from .models.actions import BaseAction
+from .models.event import BaseEvent
 
 
 class AdapterMessage:
-    pass
+
+    @staticmethod
+    def of_event(event: BaseEvent) -> "AdapterMessage":
+        return ServerEvent(event)
+
+    @staticmethod
+    def of_action(action: BaseAction) -> "AdapterMessage":
+        return ClientAction(action)
+
+    @staticmethod
+    def of_terminated() -> "AdapterMessage":
+        return AdapterTerminated()
 
 
 class ServerEvent(AdapterMessage):
     """event received from server"""
-    pass
+
+    def __init__(self, event: BaseEvent) -> None:
+        self.event = event
 
 
 class ClientAction(AdapterMessage):
     """action sent to server"""
-    pass
+
+    def __init__(self, action: BaseAction) -> None:
+        self.action = action
 
 
 class AdapterTerminated(AdapterMessage):
@@ -25,19 +45,42 @@ class AdapterTerminated(AdapterMessage):
 
 class Adapter(Actor[AdapterMessage]):
 
-    async def client(self, request: ClientAction, future: Future):
-        pass
+    async def client(
+        self,
+        request: ClientAction,
+        future: Future[ActionResponse],
+    ) -> None:
+        data = await self.backend.call_action(request.action)
+        if data.status != "ok":
+            future.set_exception(ConnectionAbortedError(data.message))
+        else:
+            future.set_result(data.data)
 
-    async def adapter(self, request: ServerEvent):
+    async def adapter(self, request: ServerEvent) -> None:
         pass
 
     async def on_error(self, error: Exception) -> Behavior[AdapterMessage]:
         return Behavior[AdapterMessage].SAME
 
+    async def push_event(self, event: BaseEvent) -> None:
+        msg = AdapterMessage.of_event(event)
+        await self._put(Message.of(msg))
+
+    async def push_action(
+        self,
+        action: BaseAction,
+        future: Future[ActionResponse],
+    ) -> None:
+        msg = AdapterMessage.of_action(action)
+        await self._put(Message.of(msg, future))
+
+    async def terminate(self) -> None:
+        msg = AdapterMessage.of_terminated()
+        await self._put(Message.of(msg))
+
     @override
     async def apply(self) -> Behavior[AdapterMessage]:
-
-        self.backend = AdapterBackend.of("default", self)
+        self.backend = BackendFactory.of("default", self)
 
         async def _apply(
                 message: Message[AdapterMessage]) -> Behavior[AdapterMessage]:

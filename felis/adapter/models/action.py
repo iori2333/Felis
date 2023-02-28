@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from .actions import BaseAction, action_map
 
 T = TypeVar('T', bound=BaseAction)
+R = TypeVar('R', bound=BaseModel)
 
 
 class Action(BaseModel, Generic[T]):
@@ -19,3 +20,11 @@ class Action(BaseModel, Generic[T]):
             params=action,
             echo=echo,
         )
+
+
+class ActionResponse(BaseModel, Generic[R]):
+    status: str
+    retcode: int
+    data: R
+    message: str
+    echo: str | None
