@@ -3,6 +3,7 @@ import os
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from .behavior import Behavior, Behaviors
+from ..utils import logger
 
 if TYPE_CHECKING:
     from .context import ActorContext
@@ -55,13 +56,23 @@ class Actor(Generic[T]):
         self._stopped = False
 
     async def _start(self):
-        current = self._behavior.apply(self._context)
-        while current is not Behaviors.stop:
-            msg = await self._mailbox.get()
-            next = current.on_receive(self._context, msg)
-            if next is Behaviors.same:
-                continue
-            current = next
+        try:
+            current = self._behavior.apply(self._context)
+            while current is not Behaviors.stop:
+                msg = await self._mailbox.get()
+                next = current.on_receive(self._context, msg)
+                self._mailbox.task_done()
+                if next is Behaviors.same:
+                    continue
+                current = next
+        except asyncio.CancelledError:
+            logger.info(f"Actor {self._name} is cancelled.")
+            if not self._mailbox.empty():
+                logger.warning(
+                    f"There are still {self._mailbox.qsize()} messages in the mailbox."
+                )
+            self._stopped = True
+            return
 
     @property
     def is_alive(self) -> bool:

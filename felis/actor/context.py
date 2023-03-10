@@ -4,6 +4,7 @@ import asyncio
 from .signals import Terminated
 from .future import Future
 from .actor import Actor, ActorRef
+from ..utils import logger
 
 if TYPE_CHECKING:
     from .system import ActorSystem
@@ -40,15 +41,18 @@ class ActorContext(Generic[T]):
 
     def spawn(self, behavior: "Behavior[U]", name: str) -> ActorRef[U]:
         if name in self._children:
-            raise ValueError("Child already exists")
+            logger.error(f"Actor {name} already exists, ignoring.")
         context = ActorContext(name, behavior, self._system, self)
         actor_ref = context.self
         self._children[name] = context
+        logger.info(f"Spawned actor {name} at {actor_ref.path}.")
         return actor_ref
 
     def stop(self, actor: ActorRef[Any]) -> None:
-        if actor not in self._children.values():
-            raise ValueError("Actor is not a child of this actor")
+        if self._children.get(actor.name) != actor:
+            logger.error(f"Actor {actor.path} doesn't exist, ignoring.")
+        context = self._children[actor.name]
+        context._task.cancel()
 
     @property
     def self(self) -> ActorRef[T]:

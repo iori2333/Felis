@@ -4,7 +4,7 @@ from typing_extensions import Self
 if TYPE_CHECKING:
     from .context import ActorContext
 from .signals import Signal
-from ..utils import cast
+from ..utils import cast, logger
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -15,7 +15,7 @@ class Behavior(Generic[T]):
         self,
         *,
         apply: "Callable[[ActorContext[T]], Self] | None" = None,
-        on_receive: "Callable[[ActorContext[T], T | Signal], Self] | None" = None
+        on_receive: "Callable[[ActorContext[T], T | Signal], Self] | None" = None,
     ) -> None:
         self.apply = apply or (lambda _: self)
         self.on_receive = on_receive or (lambda _, __: self)
@@ -98,6 +98,9 @@ class Behaviors:
             try:
                 return behavior.on_receive(context, msg)
             except except_type as e:
+                logger.error(
+                    f"Supervised actor failed: [exception={e.__class__.__name__},message={e}]"
+                )
                 return on_failure(context, e)
 
         return Behavior.from_receive(_on_receive)

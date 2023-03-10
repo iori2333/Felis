@@ -2,6 +2,8 @@ import asyncio
 from typing import Callable, Generic, TypeVar
 from typing_extensions import Self
 
+from ..utils import logger
+
 T = TypeVar("T")
 
 
@@ -37,7 +39,7 @@ class Future(Generic[T]):
         try:
             result = self._future.result()
         except asyncio.CancelledError as e:
-            print(f"Future cancelled: {e}")
+            logger.error(f"Future cancelled: {e}")
         except Exception as e:
             for callback in self._error_callbacks:
                 callback(e)
