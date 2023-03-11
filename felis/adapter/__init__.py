@@ -1,1 +1,1 @@
-from .adapter import Adapter
+from .actor import AdapterActor
