@@ -100,7 +100,8 @@ class ActorContext(Generic[T]):
             lambda _: self.self.receive_signal(Terminated(actor))
         )
 
-    def log(self, msg, level: LoggerLevel = LoggerLevel.INFO) -> None:
+    def log(self, msg: str, level: LoggerLevel = LoggerLevel.INFO) -> None:
+        msg = f"{self.self}: {msg}"
         logger = Logger.instance
         if level == LoggerLevel.DEBUG:
             logger.debug(msg)
