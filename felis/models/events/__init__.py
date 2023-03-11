@@ -1,6 +1,5 @@
 from typing import Type
 
-from .base import *
 from .message import *
 from .notice import *
 from .meta import *

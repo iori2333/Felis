@@ -1,30 +1,25 @@
-from collections import UserList
 from pydantic import BaseModel
 
 from ..self import BotStatus
-from ..events import BaseEvent
-
-from .base import BaseAction
+from ..event import BaseEvent
 
 
-class LatestEventsRequest(BaseAction):
+class LatestEventsRequest(BaseModel):
     limit: int = 0
     offset: int = 0
 
 
-class LatestEventsResponse(UserList[BaseEvent]):
+LatestEventsResponse = list[BaseEvent]
+
+
+class SupportedActionsRequest(BaseModel):
     pass
 
 
-class SupportedActionsRequest(BaseAction):
-    pass
+SupportedActionsResponse = list[str]
 
 
-class SupportedActionsResponse(UserList[str]):
-    pass
-
-
-class StatusRequest(BaseAction):
+class StatusRequest(BaseModel):
     pass
 
 
@@ -33,7 +28,7 @@ class StatusResponse(BaseModel):
     bots: list[BotStatus]
 
 
-class VersionRequest(BaseAction):
+class VersionRequest(BaseModel):
     pass
 
 

@@ -1,9 +1,7 @@
 from pydantic import BaseModel
 
-from .base import BaseAction
 
-
-class UploadFileRequest(BaseAction):
+class UploadFileRequest(BaseModel):
     type: str
     name: str
     url: str
@@ -18,26 +16,24 @@ class UploadFileResponse(BaseModel):
 
 
 class UploadFileFragmentedRequest:
-
-    class Prepare(BaseAction):
+    class Prepare(BaseModel):
         stage: str
         name: str
         total_size: int
 
-    class Upload(BaseAction):
+    class Upload(BaseModel):
         stage: str
         file_id: str
         offset: int
         data: bytes
 
-    class Complete(BaseAction):
+    class Complete(BaseModel):
         stage: str
         file_id: str
         sha256: str
 
 
 class UploadFileFragmentedResponse:
-
     class Prepare(BaseModel):
         file_id: str
 
@@ -45,7 +41,7 @@ class UploadFileFragmentedResponse:
         file_id: str
 
 
-class FileRequest(BaseAction):
+class FileRequest(BaseModel):
     file_id: str
     type: str
 
@@ -60,12 +56,11 @@ class FileResponse(BaseModel):
 
 
 class FileFragmentedRequest:
-
-    class Prepare(BaseAction):
+    class Prepare(BaseModel):
         stage: str
         file_id: str
 
-    class Download(BaseAction):
+    class Download(BaseModel):
         stage: str
         file_id: str
         offset: int
@@ -73,7 +68,6 @@ class FileFragmentedRequest:
 
 
 class FileFragmentedResponse:
-
     class Prepare(BaseModel):
         name: str
         total_size: int

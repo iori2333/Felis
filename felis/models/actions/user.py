@@ -1,10 +1,8 @@
 from collections import UserList
 from pydantic import BaseModel
 
-from .base import BaseAction
 
-
-class SelfInfoRequest(BaseAction):
+class SelfInfoRequest(BaseModel):
     pass
 
 
@@ -14,7 +12,7 @@ class SelfInfoResponse(BaseModel):
     user_displayname: str
 
 
-class UserInfoRequest(BaseAction):
+class UserInfoRequest(BaseModel):
     user_id: str
 
 
@@ -25,7 +23,7 @@ class UserInfoResponse(BaseModel):
     user_remark: str
 
 
-class FriendListRequest(BaseAction):
+class FriendListRequest(BaseModel):
     pass
 
 

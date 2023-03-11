@@ -1,4 +1,4 @@
-from .base import BaseEvent
+from ..event import BaseEvent
 from ..message import Message
 
 

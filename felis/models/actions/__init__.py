@@ -1,12 +1,11 @@
 from typing import Any, Type
-from .base import *
 from .group import *
 from .message import *
 from .user import *
 from .file import *
 from .meta import *
 
-action_map: dict[Type[BaseAction], str] = {
+action_map: dict[Type[BaseModel], str] = {
     SendMessageRequest: "send_message",
     DeleteMessageRequest: "delete_message",
     SelfInfoRequest: "get_self_info",
@@ -31,7 +30,7 @@ action_map: dict[Type[BaseAction], str] = {
     VersionRequest: "get_version",
 }
 
-response_map: dict[Type[BaseAction], Type[Any] | tuple[Type[Any], ...]] = {
+response_map: dict[Type[BaseModel], Type[Any] | tuple[Type[Any], ...]] = {
     SendMessageRequest: SendMessageResponse,
     # DeleteMessageRequest: DeleteMessageResponse,
     SelfInfoRequest: SelfInfoResponse,

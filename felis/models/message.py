@@ -1,4 +1,3 @@
-from collections import UserList
 from typing import Generic, TypeVar
 from pydantic import BaseModel
 
@@ -52,6 +51,20 @@ class Location(MessageData):
 class Reply(MessageData):
     message_id: str
     user_id: str | None
+
+
+segment_map = {
+    "text": Text,
+    "mention": Mention,
+    "mention_all": MentionAll,
+    "image": Image,
+    "voice": Voice,
+    "audio": Audio,
+    "video": Video,
+    "file": File,
+    "location": Location,
+    "reply": Reply,
+}
 
 
 class MessageSegment(BaseModel, Generic[T]):
@@ -117,6 +130,10 @@ class MessageSegment(BaseModel, Generic[T]):
             data=Reply(message_id=message_id, user_id=user_id),
         )
 
+    def __init__(self, **data) -> None:
+        DataClass = segment_map[data["type"]]
+        data["data"] = DataClass(**data["data"])
+        super().__init__(**data)
 
-class Message(UserList[MessageSegment]):
-    pass
+
+Message = list[MessageSegment]

@@ -1,4 +1,4 @@
-from .base import BaseEvent
+from ..event import BaseEvent
 from ..actions.meta import StatusResponse, VersionResponse
 
 

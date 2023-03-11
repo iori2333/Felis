@@ -2,10 +2,10 @@ from typing import Generic, TypeVar
 from typing_extensions import Self
 from pydantic import BaseModel
 
-from .actions import BaseAction, action_map
+from .actions import action_map
 
-T = TypeVar('T', bound=BaseAction)
-R = TypeVar('R', bound=BaseModel)
+T = TypeVar("T", bound=BaseModel)
+R = TypeVar("R", bound=BaseModel)
 
 
 class Action(BaseModel, Generic[T]):
@@ -14,7 +14,7 @@ class Action(BaseModel, Generic[T]):
     echo: str | None
 
     @classmethod
-    def of(cls, action: BaseAction, echo: str | None = None) -> Self:
+    def of(cls, action: T, echo: str | None = None) -> Self:
         return cls(
             action=action_map.get(type(action), "unknown"),
             params=action,

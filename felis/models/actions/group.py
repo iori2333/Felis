@@ -1,10 +1,7 @@
-from collections import UserList
 from pydantic import BaseModel
 
-from .base import BaseAction
 
-
-class GroupInfoRequest(BaseAction):
+class GroupInfoRequest(BaseModel):
     group_id: str
 
 
@@ -13,15 +10,14 @@ class GroupInfoResponse(BaseModel):
     group_name: str
 
 
-class GroupListRequest(BaseAction):
+class GroupListRequest(BaseModel):
     pass
 
 
-class GroupListResponse(UserList[GroupInfoResponse]):
-    pass
+GroupListResponse = list[GroupInfoResponse]
 
 
-class GroupMemberInfoRequest(BaseAction):
+class GroupMemberInfoRequest(BaseModel):
     group_id: str
     user_id: str
 
@@ -32,18 +28,17 @@ class GroupMemberInfoResponse(BaseModel):
     user_displayname: str
 
 
-class GroupMemberListRequest(BaseAction):
+class GroupMemberListRequest(BaseModel):
     group_id: str
 
 
-class GroupMemberListResponse(UserList[GroupMemberInfoResponse]):
-    pass
+GroupMemberListResponse = list[GroupMemberInfoResponse]
 
 
-class SetGroupNameRequest(BaseAction):
+class SetGroupNameRequest(BaseModel):
     group_id: str
     group_name: str
 
 
-class LeaveGroupRequest(BaseAction):
+class LeaveGroupRequest(BaseModel):
     group_id: str

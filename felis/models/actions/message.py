@@ -1,10 +1,9 @@
 from pydantic import BaseModel, validator
 
 from ..message import Message
-from .base import BaseAction
 
 
-class SendMessageRequest(BaseAction):
+class SendMessageRequest(BaseModel):
     detail_type: str
     user_id: str | None
     group_id: str | None
@@ -36,5 +35,5 @@ class SendMessageResponse(BaseModel):
     time: float
 
 
-class DeleteMessageRequest(BaseAction):
+class DeleteMessageRequest(BaseModel):
     message_id: str
