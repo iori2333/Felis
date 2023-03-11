@@ -50,6 +50,3 @@ class Logger:
 
     def add_output(self, path: str | Path) -> None:
         self._logger.addHandler(logging.FileHandler(path))
-
-
-logger = Logger.instance

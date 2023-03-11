@@ -3,7 +3,7 @@ import os
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from .behavior import Behavior, Behaviors
-from ..utils import logger
+from ..utils import Logger
 
 if TYPE_CHECKING:
     from .context import ActorContext
@@ -44,6 +44,9 @@ class ActorRef(Generic[T]):
     def receive_signal(self, signal: Signal) -> None:
         self._actor.tell(signal)
 
+    def __repr__(self) -> str:
+        return f"ActorRef[path={self.path}]"
+
 
 class Actor(Generic[T]):
     def __init__(
@@ -66,6 +69,7 @@ class Actor(Generic[T]):
                     continue
                 current = next
         except asyncio.CancelledError:
+            logger = Logger.instance
             logger.info(f"Actor {self._name} is cancelled.")
             if not self._mailbox.empty():
                 logger.warning(

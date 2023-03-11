@@ -4,7 +4,7 @@ from typing_extensions import Self
 if TYPE_CHECKING:
     from .context import ActorContext
 from .signals import Signal
-from ..utils import cast, logger
+from ..utils import cast, LoggerLevel
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -98,8 +98,9 @@ class Behaviors:
             try:
                 return behavior.on_receive(context, msg)
             except except_type as e:
-                logger.error(
-                    f"Supervised actor failed: [exception={e.__class__.__name__},message={e}]"
+                context.log(
+                    f"Supervised actor failed: [exception={e.__class__.__name__},message={e}]",
+                    LoggerLevel.ERROR,
                 )
                 return on_failure(context, e)
 

@@ -1,10 +1,10 @@
-from typing import TYPE_CHECKING, Any, Callable, Generic, Iterable, TypeVar, Sequence
+from typing import TYPE_CHECKING, Any, Callable, Generic, Iterable, TypeVar
 import asyncio
 
 from .signals import Terminated
 from .future import Future
 from .actor import Actor, ActorRef
-from ..utils import logger
+from ..utils import Logger, LoggerLevel
 
 if TYPE_CHECKING:
     from .system import ActorSystem
@@ -41,16 +41,16 @@ class ActorContext(Generic[T]):
 
     def spawn(self, behavior: "Behavior[U]", name: str) -> ActorRef[U]:
         if name in self._children:
-            logger.error(f"Actor {name} already exists, ignoring.")
+            self.log(f"Actor {name} already exists, ignoring.", LoggerLevel.ERROR)
         context = ActorContext(name, behavior, self._system, self)
         actor_ref = context.self
         self._children[name] = context
-        logger.info(f"Spawned actor {name} at {actor_ref.path}.")
+        self.log(f"Spawned actor {name} at {actor_ref.path}.")
         return actor_ref
 
     def stop(self, actor: ActorRef[Any]) -> None:
         if self._children.get(actor.name) != actor:
-            logger.error(f"Actor {actor.path} doesn't exist, ignoring.")
+            self.log(f"Actor {actor.path} doesn't exist, ignoring.", LoggerLevel.ERROR)
         context = self._children[actor.name]
         context._task.cancel()
 
@@ -99,3 +99,19 @@ class ActorContext(Generic[T]):
         context._task.add_done_callback(
             lambda _: self.self.receive_signal(Terminated(actor))
         )
+
+    def log(self, msg, level: LoggerLevel = LoggerLevel.INFO) -> None:
+        logger = Logger.instance
+        if level == LoggerLevel.DEBUG:
+            logger.debug(msg)
+        elif level == LoggerLevel.INFO:
+            logger.info(msg)
+        elif level == LoggerLevel.WARNING:
+            logger.warning(msg)
+        elif level == LoggerLevel.ERROR:
+            logger.error(msg)
+        elif level == LoggerLevel.CRITICAL:
+            logger.error(msg)
+            assert False, "Critical error, exiting."
+        else:
+            raise ValueError("Invalid log level")

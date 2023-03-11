@@ -1,4 +1,4 @@
 from .types import cast
-from .logger import logger
+from .logger import Logger, LoggerLevel
 
-__all__ = ["cast", "logger"]
+__all__ = ["cast", "Logger"]
