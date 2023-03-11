@@ -75,14 +75,15 @@ class ActorContext(Generic[T]):
         self,
         actor: ActorRef[U],
         message_func: Callable[[Future], U],
-        on_result: Callable[[Any], Any],
+        on_result: Callable[[Any], Any] | None = None,
         on_error: Callable[[Exception], Any] | None = None,
         timeout: float = 5.0,
-    ) -> None:
+    ) -> Future:
         loop = asyncio.get_event_loop()
         future = Future.of(loop, timeout).then(on_result).catch(on_error)
         message = message_func(future)
         actor.tell(message)
+        return future
 
     async def wait(self) -> None:
         await asyncio.gather(*map(lambda f: f.wait(), self._children.values()))

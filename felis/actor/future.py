@@ -65,3 +65,6 @@ class Future(Generic[T]):
 
     def cancel(self):
         self.set_exception(asyncio.TimeoutError())
+
+    def __await__(self):
+        return self._future.__await__()
