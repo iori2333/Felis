@@ -13,7 +13,9 @@ class Future(Generic[T]):
         self._done_callbacks: list[Callable[[T], None]] = []
         self._error_callbacks: list[Callable[[Exception], None]] = []
         if timeout > 0:
-            future.get_loop().call_later(timeout, lambda: self.cancel())
+            self._timeout = future.get_loop().call_later(timeout, lambda: self.cancel())
+        else:
+            self._timeout = None
         self._future.add_done_callback(lambda _: self.on_done())
 
     @classmethod
@@ -29,11 +31,15 @@ class Future(Generic[T]):
         if self._future.done():
             return
         self._future.set_result(result)
+        if self._timeout is not None:
+            self._timeout.cancel()
 
     def set_exception(self, exception: Exception) -> None:
         if self._future.done():
             return
         self._future.set_exception(exception)
+        if self._timeout is not None:
+            self._timeout.cancel()
 
     def on_done(self):
         try:
@@ -58,4 +64,4 @@ class Future(Generic[T]):
         return self
 
     def cancel(self):
-        self._future.set_exception(asyncio.TimeoutError())
+        self.set_exception(asyncio.TimeoutError())
