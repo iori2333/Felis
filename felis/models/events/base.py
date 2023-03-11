@@ -1,6 +1,5 @@
 from pydantic import BaseModel
-from .self import Self
-
+from typing_extensions import Self
 
 class BaseEvent(BaseModel):
     id: str

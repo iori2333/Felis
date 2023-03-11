@@ -1,5 +1,5 @@
+from .base import BaseEvent
 from ..actions.meta import StatusResponse, VersionResponse
-from ..event import BaseEvent
 
 
 class MetaEvent(BaseEvent):

@@ -1,4 +1,4 @@
-from ..event import BaseEvent
+from .base import BaseEvent
 
 
 class NotifyEvent(BaseEvent):

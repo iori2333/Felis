@@ -2,7 +2,7 @@ from collections import UserList
 from pydantic import BaseModel
 
 from ..self import BotStatus
-from ..event import BaseEvent
+from ..events import BaseEvent
 
 from .base import BaseAction
 
