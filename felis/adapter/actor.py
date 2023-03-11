@@ -1,4 +1,5 @@
 from typing import Any, Mapping, Type
+from typing_extensions import Self
 from pydantic import BaseModel
 
 from .adapters import AdapterFactory
@@ -10,6 +11,11 @@ from ..utils import LoggerLevel
 EVENT_KEY = ServiceKey[BaseEvent]()
 
 
+class AdapterConfig(BaseModel):
+    adapter_type: str = "onebot"
+    connection_type: str = "websocket"
+
+
 class AdapterMessage:
     @staticmethod
     def of_response(data: Mapping[str, Any]) -> "AdapterMessage":
@@ -17,7 +23,7 @@ class AdapterMessage:
 
     @staticmethod
     def of_action(
-        action: BaseModel, future: Future[ActionResponse]
+        action: BaseModel, future: Future[ActionResponse] | None = None
     ) -> "AdapterMessage":
         return ClientAction(action, future)
 
@@ -36,7 +42,7 @@ class ServerData(AdapterMessage):
 class ClientAction(AdapterMessage):
     """action sent to server"""
 
-    def __init__(self, action: BaseModel, future: Future) -> None:
+    def __init__(self, action: BaseModel, future: Future | None) -> None:
         self.action = action
         self.future = future
 
@@ -62,21 +68,24 @@ class AdapterActor:
 
     """
 
-    req_seq = 0
-    future_store = dict[str, tuple[Future[ActionResponse], Type[BaseModel]]]()
-    adapter = AdapterFactory.get("onebot")
+    def __init__(self, config: AdapterConfig) -> None:
+        self.req_seq = 0
+        self.future_store = dict[str, tuple[Future[ActionResponse], Type[BaseModel]]]()
+        self.config = config
+        self.adapter = AdapterFactory.get(config.adapter_type)
 
     @classmethod
-    def next_seq(cls) -> str:
-        cls.req_seq += 1
-        return str(cls.req_seq)
+    def of(cls, config: AdapterConfig | None = None) -> Self:
+        return cls(config or AdapterConfig())
 
-    @classmethod
-    def apply(cls) -> Behavior[AdapterMessage]:
-        return Behaviors.setup(cls.setup)
+    def next_seq(self) -> str:
+        self.req_seq += 1
+        return str(self.req_seq)
 
-    @classmethod
-    def setup(cls, context: ActorContext[AdapterMessage]) -> Behavior[AdapterMessage]:
+    def apply(self) -> Behavior[AdapterMessage]:
+        return Behaviors.setup(self.setup)
+
+    def setup(self, context: ActorContext[AdapterMessage]) -> Behavior[AdapterMessage]:
         router = Routers.group(EVENT_KEY)
         router = context.spawn(router.apply(), "event_router")
 
@@ -85,25 +94,27 @@ class AdapterActor:
         ) -> Behavior[AdapterMessage]:
             loop = context.loop
             if isinstance(message, ClientAction):
-                seq, future = cls.next_seq(), message.future
-                cls.future_store[seq] = future, type(message.action)
+                context.log(f"Sending action: {message.action}")
+                if message.future is not None:
+                    seq, future = self.next_seq(), message.future
+                    self.future_store[seq] = future, type(message.action)
                 # create task that handles the api call
             elif isinstance(message, ServerData):
-                if cls.adapter.is_response(message.data):
+                if self.adapter.is_response(message.data):
                     seq = message.data["echo"]
-                    if seq not in cls.future_store:
+                    if seq not in self.future_store:
                         context.log(
                             f"Received data with seq={seq}, which is not found in future store.",
                             LoggerLevel.WARNING,
                         )
                         return Behavior[AdapterMessage].same
-                    future, action_type = cls.future_store.pop(seq)
+                    future, action_type = self.future_store.pop(seq)
                     future.set_result(
-                        cls.adapter.create_action_response(message.data, action_type)
+                        self.adapter.create_action_response(message.data, action_type)
                     )
                 else:
                     # send event to actors that subscribes EVENT_KEY
-                    event = cls.adapter.create_event(message.data)
+                    event = self.adapter.create_event(message.data)
                     context.log(f"Received event: {event}")
                     router.tell(event)
             else:
