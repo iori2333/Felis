@@ -1,4 +1,5 @@
 from typing import Generic, TypeVar
+from typing_extensions import Self
 from pydantic import BaseModel
 
 
@@ -131,9 +132,45 @@ class MessageSegment(BaseModel, Generic[T]):
         )
 
     def __init__(self, **data) -> None:
-        DataClass = segment_map[data["type"]]
-        data["data"] = DataClass(**data["data"])
+        if isinstance(data["data"], dict):
+            DataClass = segment_map[data["type"]]
+            data["data"] = DataClass(**data["data"])
         super().__init__(**data)
 
 
-Message = list[MessageSegment]
+class Message(list[MessageSegment]):
+    @classmethod
+    def of(cls, *segments: MessageSegment | str) -> "Message":
+        transformed = [
+            MessageSegment.text(segment) if isinstance(segment, str) else segment
+            for segment in segments
+        ]
+        return cls(transformed)
+
+    def as_text(self) -> str:
+        return "".join(segment.data.text for segment in self if segment.type == "text")
+
+    def split(self, mark: str = " ") -> list[Self]:
+        ret = list[Self]()
+        current = Message()
+        for segment in self:
+            if segment.type != "text":
+                current.append(segment)
+                continue
+            for text in segment.data.text.split(mark):
+                if not text:
+                    continue
+                current.add(MessageSegment.text(text))
+                ret.append(current)
+                current = Message()
+        if current:
+            ret.append(current)
+        return ret
+
+    def add(self, segment: MessageSegment) -> None:
+        if not self:
+            self.append(segment)
+        elif segment.type == "text" and self[-1].type == "text":
+            self[-1].data.text += segment.data.text
+        else:
+            self.append(segment)

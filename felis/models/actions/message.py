@@ -1,5 +1,5 @@
 from pydantic import BaseModel, validator
-
+from typing_extensions import Self
 from ..message import Message
 
 
@@ -28,6 +28,39 @@ class SendMessageRequest(BaseModel):
         if values["detail_type"] == "channel":
             assert v is not None
         return v
+
+    @classmethod
+    def group(cls, group_id: str, message: Message) -> Self:
+        return cls(
+            detail_type="group",
+            user_id=None,
+            group_id=group_id,
+            guild_id=None,
+            channel_id=None,
+            message=message,
+        )
+
+    @classmethod
+    def private(cls, user_id: str, message: Message) -> Self:
+        return cls(
+            detail_type="private",
+            user_id=user_id,
+            group_id=None,
+            guild_id=None,
+            channel_id=None,
+            message=message,
+        )
+
+    @classmethod
+    def channel(cls, guild_id: str, channel_id: str, message: Message) -> Self:
+        return cls(
+            detail_type="channel",
+            user_id=None,
+            group_id=None,
+            guild_id=guild_id,
+            channel_id=channel_id,
+            message=message,
+        )
 
 
 class SendMessageResponse(BaseModel):
