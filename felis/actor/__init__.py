@@ -4,8 +4,13 @@ from .context import ActorContext
 from .future import Future
 from .signals import Signal, Terminated
 from .system import ActorSystem
-from .internal.receptionist import ServiceKey, Receptionist, ReceptionistRequest, ListingResponse
-
+from .internal.receptionist import (
+    ServiceKey,
+    Receptionist,
+    ReceptionistRequest,
+    ListingResponse,
+)
+from .internal.router import Routers, Executor
 
 __all__ = [
     "Actor",
@@ -20,5 +25,7 @@ __all__ = [
     "ServiceKey",
     "Receptionist",
     "ReceptionistRequest",
-    "ListingResponse"
+    "ListingResponse",
+    "Routers",
+    "Executor",
 ]

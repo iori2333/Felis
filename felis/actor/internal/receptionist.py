@@ -119,10 +119,7 @@ class Receptionist:
             key = message.key
             adapter = message.adapter
             reply_to = message.reply_to
-            if key not in cls.actor_map:
-                response = ListingResponse()
-            else:
-                response = ListingResponse(*cls.actor_map[key])
+            response = ListingResponse(*cls.actor_map.get(key, []))
             context.log(f"Found {len(response)} with {key}, sending to {reply_to}.")
             reply_to.tell(adapter(response))
         elif isinstance(message, Subscribe):
@@ -132,4 +129,5 @@ class Receptionist:
                 cls.subscription_map[key] = []
             cls.subscription_map[key].append(actor)
             context.log(f"Added subscription for {actor.path} with topic {key}.")
+            actor.tell(ListingResponse(*cls.actor_map.get(key, [])))
         return Behavior[ReceptionistRequest].same
