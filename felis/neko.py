@@ -3,20 +3,11 @@ from pathlib import Path
 from pydantic import BaseModel
 from typing_extensions import Self
 
-from .adapter.actor import AdapterConfig
-from .client.actor import ClientConfig, ClientActor
-from .driver.actor import DriverConfig, DriverActor
-
 from .actor import ActorContext, Behavior, Behaviors, ActorSystem
-from .adapter import AdapterActor
-
-
-class NekoMessage:
-    pass
-
-
-class Sleep(NekoMessage):
-    pass
+from .adapter import AdapterConfig, AdapterActor
+from .client import ClientConfig, ClientActor
+from .driver import DriverConfig, DriverActor
+from .messages.neko import NekoMessage, Sleep
 
 
 class NekoConfig(BaseModel):
