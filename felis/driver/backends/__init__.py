@@ -1,3 +1,3 @@
-from .ws import WebSocketBackend
+from .ws_reverse import WebsocketReverseBackend
 
-__all__ = ["WebSocketBackend"]
+__all__ = ["WebsocketReverseBackend"]

@@ -9,8 +9,8 @@ from ..actor import DriverMessage
 from ...actor import ActorRef
 
 
-@Backends.register("websocket")
-class WebSocketBackend(Backend):
+@Backends.register("websocket_reverse")
+class WebsocketReverseBackend(Backend):
     def __init__(
         self,
         driver_actor: "ActorRef[DriverMessage]",

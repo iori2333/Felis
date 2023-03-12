@@ -1,6 +1,6 @@
 from .backend import Backend, Backends
 from .actor import DriverActor, DriverConfig
-from .backends import WebSocketBackend
+from .backends import WebsocketReverseBackend
 
 
 __all__ = [
@@ -8,5 +8,5 @@ __all__ = [
     "DriverConfig",
     "Backend",
     "Backends",
-    "WebSocketBackend",
+    "WebsocketReverseBackend",
 ]
