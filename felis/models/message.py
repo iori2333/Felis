@@ -1,4 +1,4 @@
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, overload
 from typing_extensions import Self
 from pydantic import BaseModel
 
@@ -150,6 +150,17 @@ class Message(list[MessageSegment]):
     def as_text(self) -> str:
         return "".join(segment.data.text for segment in self if segment.type == "text")
 
+    def split_first(self, mark: str = " ") -> tuple[str, Self]:
+        if not self:
+            return "", Message()
+        if self[0].type != "text":
+            return "", self
+        text = self[0].data.text
+        splits = text.split(mark, 1)
+        if len(splits) == 1:
+            return "", self
+        return splits[0], splits[1] + self[1:]
+
     def split(self, mark: str = " ") -> list[Self]:
         ret = list[Self]()
         current = Message()
@@ -174,3 +185,35 @@ class Message(list[MessageSegment]):
             self[-1].data.text += segment.data.text
         else:
             self.append(segment)
+
+    def __iadd__(self, other: str | MessageSegment | Self) -> Self:
+        if isinstance(other, MessageSegment):
+            self.add(other)
+        elif isinstance(other, str):
+            self.add(MessageSegment.text(other))
+        else:
+            for segment in other:
+                self.add(segment)
+        return self
+
+    def __add__(self, other: str | MessageSegment | Self) -> Self:
+        ret = Message()
+        ret += self
+        ret += other
+        return ret
+    
+    def __radd__(self, other: str | MessageSegment | Self) -> Self:
+        return self.__add__(other)
+
+    @overload
+    def __getitem__(self, key: int) -> MessageSegment:
+        ...
+
+    @overload
+    def __getitem__(self, key: slice) -> Self:
+        ...
+
+    def __getitem__(self, key):
+        if isinstance(key, slice):
+            return Message(super().__getitem__(key))
+        return super().__getitem__(key)
