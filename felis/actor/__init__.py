@@ -11,6 +11,7 @@ from .internal.receptionist import (
     ListingResponse,
 )
 from .internal.router import Routers, Executor
+from .internal.forwarder import Forwarders
 
 __all__ = [
     "Actor",
@@ -28,4 +29,5 @@ __all__ = [
     "ListingResponse",
     "Routers",
     "Executor",
+    "Forwarders",
 ]

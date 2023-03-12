@@ -3,7 +3,7 @@ from typing_extensions import Self
 from pydantic import BaseModel
 
 from .adapter import Adapters
-from ..actor import ActorContext, Behavior, Behaviors, Future, ServiceKey, Routers
+from ..actor import ActorContext, Behavior, Behaviors, Future, ServiceKey, Forwarders
 from ..messages.adapter import (
     AdapterMessage,
     AdapterTerminated,
@@ -60,9 +60,11 @@ class AdapterActor:
         return Behaviors.setup(self.setup)
 
     def setup(self, context: ActorContext[AdapterMessage]) -> Behavior[AdapterMessage]:
-        event_router = context.spawn(Routers.group(EVENT_KEY).apply(), "event_router")
-        action_router = context.spawn(
-            Routers.group(ACTION_KEY).apply(), "action_router"
+        event_forwarder = context.spawn(
+            Forwarders.group(EVENT_KEY).apply(), "event_forwarder"
+        )
+        action_forwarder = context.spawn(
+            Forwarders.group(ACTION_KEY).apply(), "action_forwarder"
         )
 
         def _apply(
@@ -75,7 +77,7 @@ class AdapterActor:
                         seq, future = self.next_seq(), future
                         self.future_store[seq] = future, type(action)
                         action.echo = seq
-                    action_router.tell(DriverMessage.of_action(action.dict()))
+                    action_forwarder.tell(DriverMessage.of_action(action.dict()))
                 case ServerData(data):
                     if self.adapter.is_response(data):
                         seq = data["echo"]
@@ -93,7 +95,7 @@ class AdapterActor:
                         # send event to actors that subscribes EVENT_KEY
                         event = self.adapter.create_event(data)
                         context.log(f"Received event: {event}")
-                        event_router.tell(ClientMessage.of_event(event))
+                        event_forwarder.tell(ClientMessage.of_event(event))
                 case AdapterTerminated():
                     return Behavior[AdapterMessage].stop
             return Behavior[AdapterMessage].same
