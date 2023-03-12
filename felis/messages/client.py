@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from ..models.event import BaseEvent
 
 
@@ -7,6 +8,6 @@ class ClientMessage:
         return AdapterEvent(event)
 
 
+@dataclass
 class AdapterEvent(ClientMessage):
-    def __init__(self, event: BaseEvent) -> None:
-        self.event = event
+    event: BaseEvent

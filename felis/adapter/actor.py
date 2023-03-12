@@ -4,7 +4,12 @@ from pydantic import BaseModel
 
 from .adapter import Adapters
 from ..actor import ActorContext, Behavior, Behaviors, Future, ServiceKey, Routers
-from ..messages.adapter import AdapterMessage, ClientAction, ServerData
+from ..messages.adapter import (
+    AdapterMessage,
+    AdapterTerminated,
+    ClientAction,
+    ServerData,
+)
 from ..messages.client import ClientMessage
 from ..messages.driver import DriverMessage
 from ..models.action import ActionResponse
@@ -63,34 +68,34 @@ class AdapterActor:
         def _apply(
             context: ActorContext[AdapterMessage], message: AdapterMessage
         ) -> Behavior[AdapterMessage]:
-            loop = context.loop
-            if isinstance(message, ClientAction):
-                context.log(f"Sending action: {message.action}")
-                if message.future is not None:
-                    seq, future = self.next_seq(), message.future
-                    self.future_store[seq] = future, type(message.action)
-                    message.action.echo = seq
-                action_router.tell(DriverMessage.of_action(message.action.dict()))
-            elif isinstance(message, ServerData):
-                if self.adapter.is_response(message.data):
-                    seq = message.data["echo"]
-                    if seq not in self.future_store:
-                        context.log(
-                            f"Received data with seq={seq}, which is not found in future store.",
-                            LoggerLevel.WARNING,
+            match message:
+                case ClientAction(action, future):
+                    context.log(f"Sending action: {action}")
+                    if future is not None:
+                        seq, future = self.next_seq(), future
+                        self.future_store[seq] = future, type(action)
+                        action.echo = seq
+                    action_router.tell(DriverMessage.of_action(action.dict()))
+                case ServerData(data):
+                    if self.adapter.is_response(data):
+                        seq = data["echo"]
+                        if seq not in self.future_store:
+                            context.log(
+                                f"Received data with seq={seq}, which is not found in future store.",
+                                LoggerLevel.WARNING,
+                            )
+                            return Behavior[AdapterMessage].same
+                        future, action_type = self.future_store.pop(seq)
+                        future.set_result(
+                            self.adapter.create_action_response(data, action_type)
                         )
-                        return Behavior[AdapterMessage].same
-                    future, action_type = self.future_store.pop(seq)
-                    future.set_result(
-                        self.adapter.create_action_response(message.data, action_type)
-                    )
-                else:
-                    # send event to actors that subscribes EVENT_KEY
-                    event = self.adapter.create_event(message.data)
-                    context.log(f"Received event: {event}")
-                    event_router.tell(ClientMessage.of_event(event))
-            else:
-                return Behavior[AdapterMessage].stop
+                    else:
+                        # send event to actors that subscribes EVENT_KEY
+                        event = self.adapter.create_event(data)
+                        context.log(f"Received event: {event}")
+                        event_router.tell(ClientMessage.of_event(event))
+                case AdapterTerminated():
+                    return Behavior[AdapterMessage].stop
             return Behavior[AdapterMessage].same
 
         behavior = Behaviors.receive_message(_apply)

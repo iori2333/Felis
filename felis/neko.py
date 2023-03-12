@@ -52,8 +52,9 @@ class Neko:
         return Behavior[NekoMessage].same
 
     def on_message(self, _, message: NekoMessage) -> Behavior[NekoMessage]:
-        if isinstance(message, Sleep):
-            return Behavior[NekoMessage].stop
+        match message:
+            case Sleep():
+                return Behavior[NekoMessage].stop
         return Behavior[NekoMessage].same
 
     @property

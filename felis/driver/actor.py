@@ -50,21 +50,21 @@ class DriverActor:
         def on_message(
             context: ActorContext[DriverMessage], message: DriverMessage
         ) -> Behavior[DriverMessage]:
-            if isinstance(message, BackendData):
-                context.log(f"Received data: {message.data}")
-                self._adapter.tell(AdapterMessage.of_response(message.data))
-            elif isinstance(message, BackendError):
-                context.log(f"Received error: {message.error}", LoggerLevel.ERROR)
-            elif isinstance(message, BackendClosed):
-                context.log(
-                    f"Backend closed, retrying in {self._config.retry_interval} seconds...",
-                    LoggerLevel.ERROR,
-                )
-                context.loop.call_later(self._config.retry_interval, backend_task)
-                return Behavior[DriverMessage].same
-            elif isinstance(message, AdapterAction):
-                context.log(f"Sending action: {message.action}")
-                backend.send(message.action)
+            match message:
+                case BackendData(data):
+                    context.log(f"Received data: {data}")
+                    self._adapter.tell(AdapterMessage.of_response(data))
+                case BackendError(error):
+                    context.log(f"Received error: {error}", LoggerLevel.ERROR)
+                case BackendClosed():
+                    context.log(
+                        f"Backend closed, retrying in {self._config.retry_interval} seconds...",
+                        LoggerLevel.ERROR,
+                    )
+                    context.loop.call_later(self._config.retry_interval, backend_task)
+                case AdapterAction(action):
+                    context.log(f"Sending action: {action}")
+                    backend.send(action)
             return Behavior[DriverMessage].same
 
         return Behaviors.receive_message(on_message)

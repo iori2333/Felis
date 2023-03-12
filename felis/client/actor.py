@@ -43,12 +43,12 @@ class ClientActor:
         def on_message(
             context: ActorContext[ClientMessage], message: ClientMessage
         ) -> Behavior[ClientMessage]:
-            if isinstance(message, AdapterEvent):
-                event = message.event
-                for command in commands:
-                    if command.accepts(event):
-                        context.log(f"running command {command.name}")
-                        context.loop.create_task(command.execute(event))
+            match message:
+                case AdapterEvent(event):
+                    for command in commands:
+                        if command.accepts(event):
+                            context.log(f"running command {command.name}")
+                            context.loop.create_task(command.execute(event))
             return Behavior[ClientMessage].same
 
         return Behaviors.receive_message(on_message)

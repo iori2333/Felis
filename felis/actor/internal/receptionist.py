@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Callable, TypeVar, Generic
 
 from ..context import ActorContext
@@ -48,34 +49,29 @@ class ReceptionistRequest:
         return Subscribe(key, actor)
 
 
+@dataclass
 class Register(Generic[T], ReceptionistRequest):
-    def __init__(self, key: ServiceKey[T], actor: ActorRef[T]) -> None:
-        self.key = key
-        self.actor = actor
+    key: ServiceKey[T]
+    actor: ActorRef[T]
 
 
+@dataclass
 class Deregister(Generic[T], ReceptionistRequest):
-    def __init__(self, key: ServiceKey[T], actor: ActorRef[T]) -> None:
-        self.key = key
-        self.actor = actor
+    key: ServiceKey[T]
+    actor: ActorRef[T]
 
 
+@dataclass
 class Find(Generic[T, U], ReceptionistRequest):
-    def __init__(
-        self,
-        key: ServiceKey[T],
-        adapter: Callable[[ListingResponse[T]], U],
-        reply_to: ActorRef[U],
-    ) -> None:
-        self.key = key
-        self.adapter = adapter
-        self.reply_to = reply_to
+    key: ServiceKey[T]
+    adapter: Callable[[ListingResponse[T]], U]
+    reply_to: ActorRef[U]
 
 
+@dataclass
 class Subscribe(Generic[T], ReceptionistRequest):
-    def __init__(self, key: ServiceKey[T], actor: ActorRef[ListingResponse[T]]) -> None:
-        self.key = key
-        self.actor = actor
+    key: ServiceKey[T]
+    actor: ActorRef[ListingResponse[T]]
 
 
 class Receptionist:
@@ -98,36 +94,28 @@ class Receptionist:
     def on_message(
         cls, context: ActorContext[ReceptionistRequest], message: ReceptionistRequest
     ) -> Behavior[ReceptionistRequest]:
-        if isinstance(message, Register):
-            key = message.key
-            actor = message.actor
-            if key not in cls.actor_map:
-                cls.actor_map[key] = []
-            cls.actor_map[key].append(actor)
-            context.log(f"Registered actor {actor.path} with {key}.")
-            for subscription in cls.subscription_map.get(key, []):
-                subscription.tell(ListingResponse(*cls.actor_map[key]))
-        elif isinstance(message, Deregister):
-            key = message.key
-            actor = message.actor
-            if key in cls.actor_map:
-                cls.actor_map[key].remove(actor)
-            context.log(f"Deregistered actor {actor.path} with {key}.")
-            for subscription in cls.subscription_map.get(key, []):
-                subscription.tell(ListingResponse(*cls.actor_map[key]))
-        elif isinstance(message, Find):
-            key = message.key
-            adapter = message.adapter
-            reply_to = message.reply_to
-            response = ListingResponse(*cls.actor_map.get(key, []))
-            context.log(f"Found {len(response)} with {key}, sending to {reply_to}.")
-            reply_to.tell(adapter(response))
-        elif isinstance(message, Subscribe):
-            key = message.key
-            actor = message.actor
-            if key not in cls.subscription_map:
-                cls.subscription_map[key] = []
-            cls.subscription_map[key].append(actor)
-            context.log(f"Added subscription for {actor.path} with topic {key}.")
-            actor.tell(ListingResponse(*cls.actor_map.get(key, [])))
+        match message:
+            case Register(key, actor):
+                if key not in cls.actor_map:
+                    cls.actor_map[key] = []
+                cls.actor_map[key].append(actor)
+                context.log(f"Registered actor {actor.path} with {key}.")
+                for subscription in cls.subscription_map.get(key, []):
+                    subscription.tell(ListingResponse(*cls.actor_map[key]))
+            case Deregister(key, actor):
+                if key in cls.actor_map:
+                    cls.actor_map[key].remove(actor)
+                context.log(f"Deregistered actor {actor.path} with {key}.")
+                for subscription in cls.subscription_map.get(key, []):
+                    subscription.tell(ListingResponse(*cls.actor_map[key]))
+            case Find(key, adapter, reply_to):
+                response = ListingResponse(*cls.actor_map.get(key, []))
+                context.log(f"Found {len(response)} with {key}, sending to {reply_to}.")
+                reply_to.tell(adapter(response))
+            case Subscribe(key, actor):
+                if key not in cls.subscription_map:
+                    cls.subscription_map[key] = []
+                cls.subscription_map[key].append(actor)
+                context.log(f"Added subscription for {actor.path} with topic {key}.")
+                actor.tell(ListingResponse(*cls.actor_map.get(key, [])))
         return Behavior[ReceptionistRequest].same

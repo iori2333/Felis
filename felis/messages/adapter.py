@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Mapping, Any
 from pydantic import BaseModel
 
@@ -21,21 +22,20 @@ class AdapterMessage:
         return AdapterTerminated()
 
 
+@dataclass
 class ServerData(AdapterMessage):
-    """event received from server"""
-
-    def __init__(self, data: Mapping[str, Any]) -> None:
-        self.data = data
+    data: Mapping[str, Any]
 
 
+@dataclass
 class ClientAction(AdapterMessage):
     """action sent to server"""
 
-    def __init__(self, action: BaseModel, future: Future | None) -> None:
-        self.action = action
-        self.future = future
+    action: BaseModel
+    future: Future | None = None
 
 
+@dataclass
 class AdapterTerminated(AdapterMessage):
     """stop running the adapter"""
 

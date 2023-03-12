@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Any, Mapping
 
 
@@ -19,20 +20,21 @@ class DriverMessage:
         return BackendClosed()
 
 
+@dataclass
 class BackendData(DriverMessage):
-    def __init__(self, data: Mapping[str, Any]) -> None:
-        self.data = data
+    data: Mapping[str, Any]
 
 
+@dataclass
 class BackendError(DriverMessage):
-    def __init__(self, error: Exception) -> None:
-        self.error = error
+    error: Exception
 
 
+@dataclass
 class BackendClosed(DriverMessage):
     pass
 
 
+@dataclass
 class AdapterAction(DriverMessage):
-    def __init__(self, action: Mapping[str, Any]) -> None:
-        self.action = action
+    action: Mapping[str, Any]
