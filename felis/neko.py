@@ -3,8 +3,10 @@ from pathlib import Path
 from pydantic import BaseModel
 from typing_extensions import Self
 
-from .client.actor import ClientConfig, ClientActor
 from .adapter.actor import AdapterConfig
+from .client.actor import ClientConfig, ClientActor
+from .driver.actor import DriverConfig, DriverActor
+
 from .actor import ActorContext, Behavior, Behaviors, ActorSystem
 from .adapter import AdapterActor
 
@@ -21,6 +23,7 @@ class NekoConfig(BaseModel):
     name: str = "felis"
     adapter: AdapterConfig = AdapterConfig()
     client: ClientConfig = ClientConfig()
+    driver: DriverConfig
 
 
 class Neko:
@@ -44,12 +47,14 @@ class Neko:
         pass
 
     def setup(self, context: ActorContext[NekoMessage]) -> Behavior[NekoMessage]:
-        # context.spawn(DriverActor.apply(), name="driver")
         self.adapter = context.spawn(
             AdapterActor.of(self.config.adapter).apply(), name="adapter"
         )
         self.client = context.spawn(
             ClientActor.of(self.config.client, self.adapter).apply(), name="client"
+        )
+        self.driver = context.spawn(
+            DriverActor.of(self.config.driver, self.adapter).apply(), name="driver"
         )
         # context.spawn(DatabaseActor.apply(), name="database")
         self.customized_setup(context)
