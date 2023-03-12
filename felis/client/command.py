@@ -69,17 +69,16 @@ class Command(ABC, Generic[T]):
 
 class MessageCommand(Command[MessageEvent]):
     async def execute(self, event: MessageEvent) -> None:
-        command, *opts = event.message.split(" ")
-        command_name = command.as_text()
-        if self.prefix is not None and not command_name.startswith(self.prefix):
+        command, message = event.message.split_first()
+        if self.prefix is not None and not command.startswith(self.prefix):
             return
 
         if self.prefix is not None:
-            command_name = command_name.removeprefix(self.prefix)
+            command = command.removeprefix(self.prefix)
 
-        if command_name == self.name or command_name in self.aliases:
-            await self.handle_message(event, opts)
+        if command == self.name or command in self.aliases:
+            await self.handle_message(event, message)
 
     @abstractmethod
-    async def handle_message(self, event: MessageEvent, opts: list[Message]) -> None:
+    async def handle_message(self, event: MessageEvent, message: Message) -> None:
         raise NotImplementedError()
