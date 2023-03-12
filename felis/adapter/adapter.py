@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Mapping, Type
 from pydantic import BaseModel
 
+from ..utils import Registry
 from ..models.events import BaseEvent
 from ..models.action import ActionResponse
 
@@ -20,3 +21,7 @@ class Adapter(ABC):
     @abstractmethod
     def create_event(self, data: Mapping[str, Any]) -> BaseEvent:
         raise NotImplementedError()
+
+
+class Adapters(Registry[Adapter]):
+    pass

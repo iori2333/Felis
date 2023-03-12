@@ -2,13 +2,13 @@ from typing import Any, Mapping, Type
 from typing_extensions import override
 from pydantic import BaseModel
 
-from felis.models.action import ActionResponse
-from felis.models.actions import response_map
-from felis.models.events import BaseEvent, event_map
+from ..adapter import Adapter, Adapters
+from ...models.action import ActionResponse
+from ...models.actions import response_map
+from ...models.events import BaseEvent, event_map
 
-from ..adapter import Adapter
 
-
+@Adapters.register("onebot")
 class OneBotAdapter(Adapter):
     @override
     def is_response(self, data: Mapping[str, Any]) -> bool:

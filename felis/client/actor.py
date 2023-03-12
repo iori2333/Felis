@@ -4,11 +4,11 @@ from pydantic import BaseModel
 
 from .command import Command
 from .register import Commands
-from ..actor import ActorRef
-from ..utils import LoggerLevel
-from ..adapter import EVENT_KEY, AdapterMessage
-from ..actor import Behavior, Behaviors, ReceptionistRequest, ActorContext
+from ..actor import Behavior, Behaviors, ReceptionistRequest, ActorContext, ActorRef
+from ..adapter import EVENT_KEY
+from ..messages.adapter import AdapterMessage
 from ..models.event import BaseEvent
+from ..utils import LoggerLevel
 
 
 class ClientConfig(BaseModel):

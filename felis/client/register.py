@@ -1,10 +1,12 @@
 from typing import Callable, Type
+from typing_extensions import override
+
 from .command import Command
+from ..utils import Registry
 
 
-class Commands:
-    registered_commands = dict[str, Type[Command]]()
-
+class Commands(Registry[Command]):
+    @override
     @classmethod
     def register(
         cls,
@@ -19,11 +21,7 @@ class Commands:
             command.aliases = aliases
             command.prefix = prefix
             command.description = description
-            cls.registered_commands[command.name] = command
+            cls.registries[command.name] = command
             return command
 
         return register
-
-    @classmethod
-    def get(cls, name: str) -> Type[Command] | None:
-        return cls.registered_commands.get(name)

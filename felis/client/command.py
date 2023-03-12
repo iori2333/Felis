@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 from typing import Any, Generic, TypeVar
 from pydantic import BaseModel
 
-from ..adapter import AdapterMessage
 from ..actor import ActorRef, ActorContext
+from ..messages.adapter import AdapterMessage
 from ..models.actions import SendMessageRequest
 from ..models.event import BaseEvent
 from ..models.events import MessageEvent

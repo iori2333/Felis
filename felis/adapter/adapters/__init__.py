@@ -1,12 +1,3 @@
-from ..adapter import Adapter
+from .onebot import OneBotAdapter
 
-
-class AdapterFactory:
-    @staticmethod
-    def get(name: str) -> Adapter:
-        if name == "onebot":
-            from .onebot import OneBotAdapter
-
-            return OneBotAdapter()
-        else:
-            raise ValueError(f"unknown adapter: {name}")
+__all__ = ["OneBotAdapter"]

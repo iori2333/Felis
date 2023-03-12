@@ -1,4 +1,12 @@
-from .actor import AdapterActor, AdapterMessage, EVENT_KEY
-from .adapter import Adapter
+from .actor import AdapterActor, ACTION_KEY, EVENT_KEY
+from .adapter import Adapter, Adapters
+from .adapters import OneBotAdapter
 
-__all__ = ["AdapterActor", "AdapterMessage", "Adapter", "EVENT_KEY"]
+__all__ = [
+    "AdapterActor",
+    "Adapter",
+    "ACTION_KEY",
+    "EVENT_KEY",
+    "Adapters",
+    "OneBotAdapter",
+]
