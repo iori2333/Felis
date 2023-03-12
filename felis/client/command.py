@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Any, Generic, TypeVar
-from pydantic import BaseModel
 
 from ..actor import ActorRef, ActorContext
 from ..messages.adapter import AdapterMessage
 from ..messages.client import ClientMessage
+from ..models.action import Action
 from ..models.actions import SendMessageRequest
 from ..models.event import BaseEvent
 from ..models.events import MessageEvent
@@ -46,17 +46,21 @@ class Command(ABC, Generic[T]):
 
     def send_group_message(self, group_id: str, message: Message) -> None:
         self.adapter.tell(
-            AdapterMessage.of_action(SendMessageRequest.group(group_id, message))
+            AdapterMessage.of_action(
+                Action.of(SendMessageRequest.group(group_id, message))
+            )
         )
 
     def send_private_message(self, user_id: str, message: Message) -> None:
         self.adapter.tell(
-            AdapterMessage.of_action(SendMessageRequest.private(user_id, message))
+            AdapterMessage.of_action(
+                Action.of(SendMessageRequest.private(user_id, message))
+            )
         )
 
     async def call_action(
         self,
-        action: BaseModel,
+        action: Action,
         timeout: float = 5.0,
     ) -> Any:
         future = self.context.ask(

@@ -73,10 +73,10 @@ class AdapterActor:
             match message:
                 case ClientAction(action, future):
                     context.log(f"Sending action: {action}")
+                    seq = self.next_seq()
+                    action.echo = seq
                     if future is not None:
-                        seq, future = self.next_seq(), future
                         self.future_store[seq] = future, type(action)
-                        action.echo = seq
                     action_forwarder.tell(DriverMessage.of_action(action.dict()))
                 case ServerData(data):
                     if self.adapter.is_response(data):

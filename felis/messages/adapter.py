@@ -1,9 +1,8 @@
 from dataclasses import dataclass
 from typing import Mapping, Any
-from pydantic import BaseModel
 
 from ..actor import Future
-from ..models.action import ActionResponse
+from ..models.action import Action, ActionResponse
 
 
 class AdapterMessage:
@@ -13,7 +12,7 @@ class AdapterMessage:
 
     @staticmethod
     def of_action(
-        action: BaseModel, future: Future[ActionResponse] | None = None
+        action: Action, future: Future[ActionResponse] | None = None
     ) -> "AdapterMessage":
         return ClientAction(action, future)
 
@@ -31,7 +30,7 @@ class ServerData(AdapterMessage):
 class ClientAction(AdapterMessage):
     """action sent to server"""
 
-    action: BaseModel
+    action: Action
     future: Future | None = None
 
 
