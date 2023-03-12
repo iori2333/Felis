@@ -6,6 +6,7 @@ from typing_extensions import Self
 from .actor import ActorContext, Behavior, Behaviors, ActorSystem
 from .adapter import AdapterConfig, AdapterActor
 from .client import ClientConfig, ClientActor
+from .database import DatabaseConfig, DatabaseActor
 from .driver import DriverConfig, DriverActor
 from .messages.neko import NekoMessage, Sleep
 
@@ -14,6 +15,7 @@ class NekoConfig(BaseModel):
     name: str = "felis"
     adapter: AdapterConfig = AdapterConfig()
     client: ClientConfig = ClientConfig()
+    database: DatabaseConfig | None = None
     driver: DriverConfig
 
 
@@ -47,7 +49,10 @@ class Neko:
         self.driver = context.spawn(
             DriverActor.of(self.config.driver, self.adapter).apply(), name="driver"
         )
-        # context.spawn(DatabaseActor.apply(), name="database")
+        if self.config.database:
+            self.database = context.spawn(
+                DatabaseActor.of(self.config.database).apply(), name="database"
+            )
         self.customized_setup(context)
         return Behavior[NekoMessage].same
 
