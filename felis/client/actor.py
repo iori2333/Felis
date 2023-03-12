@@ -7,7 +7,7 @@ from .register import Commands
 from ..actor import Behavior, Behaviors, ReceptionistRequest, ActorContext, ActorRef
 from ..adapter import EVENT_KEY
 from ..messages.adapter import AdapterMessage
-from ..models.event import BaseEvent
+from ..messages.client import AdapterEvent, ClientMessage
 from ..utils import LoggerLevel
 
 
@@ -24,10 +24,10 @@ class ClientActor:
     def of(cls, config: ClientConfig, adapter: ActorRef[AdapterMessage]) -> Self:
         return cls(config, adapter)
 
-    def apply(self) -> Behavior[BaseEvent]:
+    def apply(self) -> Behavior[ClientMessage]:
         return Behaviors.setup(self.setup)
 
-    def setup(self, context: ActorContext[BaseEvent]) -> Behavior[BaseEvent]:
+    def setup(self, context: ActorContext[ClientMessage]) -> Behavior[ClientMessage]:
         commands = list[Command]()
         context.system.receptionist.tell(
             ReceptionistRequest.register(EVENT_KEY, context.self)
@@ -41,13 +41,15 @@ class ClientActor:
                 commands.append(command(context, self._adapter))
 
         def on_message(
-            context: ActorContext[BaseEvent], message: BaseEvent
-        ) -> Behavior[BaseEvent]:
-            for command in commands:
-                if command.accepts(message):
-                    context.log(f"running command {command.name}")
-                    context.loop.create_task(command.execute(message))
-            return Behavior[BaseEvent].same
+            context: ActorContext[ClientMessage], message: ClientMessage
+        ) -> Behavior[ClientMessage]:
+            if isinstance(message, AdapterEvent):
+                event = message.event
+                for command in commands:
+                    if command.accepts(event):
+                        context.log(f"running command {command.name}")
+                        context.loop.create_task(command.execute(event))
+            return Behavior[ClientMessage].same
 
         return Behaviors.receive_message(on_message)
 

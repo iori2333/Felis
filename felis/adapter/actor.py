@@ -5,12 +5,12 @@ from pydantic import BaseModel
 from .adapter import Adapters
 from ..actor import ActorContext, Behavior, Behaviors, Future, ServiceKey, Routers
 from ..messages.adapter import AdapterMessage, ClientAction, ServerData
+from ..messages.client import ClientMessage
 from ..messages.driver import DriverMessage
 from ..models.action import ActionResponse
-from ..models.events import BaseEvent
 from ..utils import LoggerLevel
 
-EVENT_KEY = ServiceKey[BaseEvent]()
+EVENT_KEY = ServiceKey[ClientMessage]()
 ACTION_KEY = ServiceKey[DriverMessage]()
 
 
@@ -88,7 +88,7 @@ class AdapterActor:
                     # send event to actors that subscribes EVENT_KEY
                     event = self.adapter.create_event(message.data)
                     context.log(f"Received event: {event}")
-                    event_router.tell(event)
+                    event_router.tell(ClientMessage.of_event(event))
             else:
                 return Behavior[AdapterMessage].stop
             return Behavior[AdapterMessage].same

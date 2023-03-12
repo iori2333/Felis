@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 from ..actor import ActorRef, ActorContext
 from ..messages.adapter import AdapterMessage
+from ..messages.client import ClientMessage
 from ..models.actions import SendMessageRequest
 from ..models.event import BaseEvent
 from ..models.events import MessageEvent
@@ -20,7 +21,7 @@ class Command(ABC, Generic[T]):
     description: str
 
     def __init__(
-        self, context: ActorContext[BaseEvent], adapter: ActorRef[AdapterMessage]
+        self, context: ActorContext[ClientMessage], adapter: ActorRef[AdapterMessage]
     ) -> None:
         self.context = context
         self.adapter = adapter
