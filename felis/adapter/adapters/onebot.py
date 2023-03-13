@@ -5,7 +5,8 @@ from pydantic import BaseModel
 from ..adapter import Adapter, Adapters
 from ...models.action import ActionResponse
 from ...models.actions import response_map
-from ...models.events import BaseEvent, event_map
+from ...models.event import BaseEvent, UnknownEvent
+from ...models.events import event_map
 
 
 @Adapters.register("onebot")
@@ -41,5 +42,9 @@ class OneBotAdapter(Adapter):
     @override
     def create_event(self, data: Mapping[str, Any]) -> BaseEvent:
         detail = data["detail_type"]
+        if detail not in event_map:
+            event = UnknownEvent.parse_obj(data)
+            event.data = dict(data)
+            return event
         EventType = event_map[detail]
         return EventType(**data)

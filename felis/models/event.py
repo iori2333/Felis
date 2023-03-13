@@ -1,3 +1,5 @@
+from typing import Any
+from typing_extensions import override
 from pydantic import BaseModel
 
 from .self import Self
@@ -21,3 +23,12 @@ class BaseEvent(BaseModel):
         if user_id is not None:
             session_id.append(f"u_{user_id}")
         return ".".join(session_id)
+
+
+class UnknownEvent(BaseEvent):
+    data: dict[str, Any] = {}
+
+    @override
+    def dict(self, **kwargs):
+        res = super().dict(**kwargs)
+        return res["data"]
