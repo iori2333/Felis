@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Any, Generic, TypeVar
 
+from .resource import ResourceManager
+
 from ..actor import ActorRef, ActorContext
 from ..messages.adapter import AdapterMessage
 from ..messages.client import ClientMessage
@@ -21,10 +23,14 @@ class Command(ABC, Generic[T]):
     description: str
 
     def __init__(
-        self, context: ActorContext[ClientMessage], adapter: ActorRef[AdapterMessage]
+        self,
+        context: ActorContext[ClientMessage],
+        adapter: ActorRef[AdapterMessage],
+        resources: ResourceManager,
     ) -> None:
         self.context = context
         self.adapter = adapter
+        self.resources = resources
 
     @abstractmethod
     async def execute(self, event: T) -> None:

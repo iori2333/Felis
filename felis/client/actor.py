@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 from .command import Command
 from .register import Commands
+from .resource import ResourceManager
 from .internal import internal_commands
 from ..actor import Behavior, Behaviors, ReceptionistRequest, ActorContext, ActorRef
 from ..adapter import EVENT_KEY
@@ -14,6 +15,7 @@ from ..utils import LoggerLevel
 
 class ClientConfig(BaseModel):
     commands: list[str] = internal_commands
+    resource_dir: str = "resources"
 
 
 class ClientActor:
@@ -30,6 +32,7 @@ class ClientActor:
 
     def setup(self, context: ActorContext[ClientMessage]) -> Behavior[ClientMessage]:
         commands = list[Command]()
+        resources = ResourceManager(self._config.resource_dir, context)
         context.system.receptionist.tell(
             ReceptionistRequest.register(EVENT_KEY, context.self)
         )
@@ -39,7 +42,7 @@ class ClientActor:
             if command is None:
                 context.log(f"Command {name} not found.", LoggerLevel.ERROR)
             else:
-                commands.append(command(context, self._adapter))
+                commands.append(command(context, self._adapter, resources))
 
         def on_message(
             context: ActorContext[ClientMessage], message: ClientMessage
