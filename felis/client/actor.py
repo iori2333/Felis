@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 from .command import Command
 from .register import Commands
+from .internal import internal_commands
 from ..actor import Behavior, Behaviors, ReceptionistRequest, ActorContext, ActorRef
 from ..adapter import EVENT_KEY
 from ..messages.adapter import AdapterMessage
@@ -12,7 +13,7 @@ from ..utils import LoggerLevel
 
 
 class ClientConfig(BaseModel):
-    commands: list[str] = ["echo"]
+    commands: list[str] = internal_commands
 
 
 class ClientActor:
