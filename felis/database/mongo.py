@@ -33,7 +33,7 @@ class Collection(Generic[T]):
         self.collection = self.db[name]
 
     def save(self, document: T) -> None:
-        self.collection.insert_one(document.json())
+        self.collection.insert_one(document.dict())
 
     def find_one(self, query: dict) -> T:
         result = self.collection.find_one(query)
