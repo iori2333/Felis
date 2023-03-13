@@ -1,5 +1,5 @@
-from typing import Generic, TypeVar, overload
-from typing_extensions import Self
+from typing import Any, Generic, TypeVar, overload
+from typing_extensions import Self, override
 from pydantic import BaseModel
 
 
@@ -52,6 +52,15 @@ class Location(MessageData):
 class Reply(MessageData):
     message_id: str
     user_id: str | None
+
+
+class Extended(MessageData):
+    data: dict[str, Any]
+
+    @override
+    def dict(self, **kwargs):
+        res = super().dict(**kwargs)
+        return res["data"]
 
 
 segment_map = {
@@ -131,10 +140,21 @@ class MessageSegment(BaseModel, Generic[T]):
             data=Reply(message_id=message_id, user_id=user_id),
         )
 
+    @staticmethod
+    def of_extended(type: str, data: dict[str, Any]) -> "MessageSegment[Extended]":
+        return MessageSegment(type=type, data=Extended(data=data))
+
+    @staticmethod
+    def construct_from_dict(type: str, data: dict[str, Any]) -> MessageData:
+        if type not in segment_map:
+            return Extended(data=data)
+
+        DataClass = segment_map[type]
+        return DataClass(**data)
+
     def __init__(self, **data) -> None:
         if isinstance(data["data"], dict):
-            DataClass = segment_map[data["type"]]
-            data["data"] = DataClass(**data["data"])
+            data["data"] = self.construct_from_dict(data["type"], data["data"])
         super().__init__(**data)
 
 
@@ -158,7 +178,7 @@ class Message(list[MessageSegment]):
         text = self[0].data.text
         splits = text.split(mark, 1)
         if len(splits) == 1:
-            return "", self
+            return text, self[1:]
         return splits[0], splits[1] + self[1:]
 
     def split(self, mark: str = " ") -> list[Self]:
@@ -190,7 +210,8 @@ class Message(list[MessageSegment]):
         if isinstance(other, MessageSegment):
             self.add(other)
         elif isinstance(other, str):
-            self.add(MessageSegment.text(other))
+            if other != "":
+                self.add(MessageSegment.text(other))
         else:
             for segment in other:
                 self.add(segment)
@@ -201,9 +222,12 @@ class Message(list[MessageSegment]):
         ret += self
         ret += other
         return ret
-    
+
     def __radd__(self, other: str | MessageSegment | Self) -> Self:
-        return self.__add__(other)
+        ret = Message()
+        ret += other
+        ret += self
+        return ret
 
     @overload
     def __getitem__(self, key: int) -> MessageSegment:
