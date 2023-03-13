@@ -17,7 +17,6 @@ from ..utils import LoggerLevel
 
 class DriverConfig(BaseModel):
     backend_type: str = "websocket_reverse"
-    reverse: bool = False
     connect_url: str
     access_token: str | None = None
     retry_interval: float = 5.0

@@ -15,8 +15,9 @@ class WebsocketReverseBackend(Backend):
         self,
         driver_actor: "ActorRef[DriverMessage]",
         url: str,
+        access_token: str | None,
     ) -> None:
-        super().__init__(driver_actor, url)
+        super().__init__(driver_actor, url, access_token)
         self.requests = asyncio.Queue[Mapping[str, Any]]()
 
     async def on_message(self, data: str | bytes) -> None:
@@ -33,7 +34,7 @@ class WebsocketReverseBackend(Backend):
 
     async def start(self) -> None:
         try:
-            async with wsc.connect(self.url) as ws:
+            async with wsc.connect(self.url, extra_headers=self.get_headers()) as ws:
                 await asyncio.gather(
                     self.task(ws, self._send),
                     self.task(ws, self._recv),
@@ -69,3 +70,9 @@ class WebsocketReverseBackend(Backend):
 
     def send(self, request: Mapping[str, Any]) -> None:
         self.requests.put_nowait(request)
+
+    def get_headers(self) -> Mapping[str, str]:
+        headers = {}
+        if self.access_token is not None:
+            headers["Authorization"] = f"Bearer {self.access_token}"
+        return headers
